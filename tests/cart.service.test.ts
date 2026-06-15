@@ -1,6 +1,5 @@
-import {store} from  "../src/store/store"
 import {addItem, removeItem, getCart} from "../src/services/cart.service"
-import {seedStore} from "../src/store/store"
+import {seedStore, store} from "../src/store/store"
 import { describe, it, expect, beforeEach } from "@jest/globals";
 
 
