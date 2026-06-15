@@ -1,11 +1,19 @@
 import express from "express"
+import {store, seedStore} from "./store/store"
 
 const app = express();
 
+// health endpoint to verify server is running
 app.get("/health", (req,res) => {
-    console.log("hello world")
     res.json({ok: true})
 })
 
-app.listen(3000, () => console.log("server is live on port: 3000"))
 
+// check if we have data in the store, if not seed it with some initial products
+if(store.products.size === 0) {
+    seedStore()
+}
+
+
+// port assignment for express application
+app.listen(3000, () => console.log("server is live on port: 3000"))
