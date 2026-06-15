@@ -27,7 +27,7 @@ describe("Coupon Service", () => {
     })
 
     it("should throw error when a non-existent coupon code gets passed down", () => {
-        expect(() => validateCoupon("INVALID")).toThrow({ status: 400, message: "invalid coupon" })
+        expect(() => validateCoupon("INVALID")).toThrow("invalid coupon")
     })
 
     it("should throw error when an already used coupon code gets passed down", () => {

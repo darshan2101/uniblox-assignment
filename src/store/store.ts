@@ -7,7 +7,8 @@ export const store = {
     orders: [] as Order[],
     coupons: new Map<string, Coupon>(),
     config: { nthOrder: 5, rewardDiscountPct: 10, lastRewardedOrderCount: 0 } as Config,
-    couponSeq: 0
+    couponSeq: 0,
+    orderSeq: 0
 }
 
 // A seed function to add some initial products to the store

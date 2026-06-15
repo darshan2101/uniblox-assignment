@@ -14,9 +14,9 @@ router.get("/:userId", (req, res) => {
         })
     }catch(e) {
         const error = e as { status?: number, message?: string }
-        res.status(error.status || 500).json({
+        res.status(error.status ?? 500).json({
             success: false,
-            message: error.message || "internal server error"
+            message: error.message ?? "internal server error"
         })
     }
 })
@@ -33,9 +33,9 @@ router.post("/:userId/items", (req, res) => {
         })
     }catch(e) {
         const error = e as { status?: number, message?: string }
-        res.status(error.status || 500).json({
+        res.status(error.status ?? 500).json({
             success: false,
-            message: error.message || "internal server error"
+            message: error.message ?? "internal server error"
         })
     }
 })
@@ -51,9 +51,9 @@ router.delete("/:userId/items/:productId", (req, res) => {
         })
     }catch(e) {
         const error = e as { status?: number, message?: string }
-        res.status(error.status || 500).json({
+        res.status(error.status ?? 500).json({
             success: false,
-            message: error.message || "internal server error"
+            message: error.message ?? "internal server error"
         })
     }
 })
