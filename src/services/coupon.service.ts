@@ -35,3 +35,10 @@ export function markUsed(code: string, orderId: string) {
     }
     return coupon
 }
+
+export function grantRewardIfEligible() {
+    if(!isEligible()) return null;
+    const coupon = generateCoupon()
+    store.config.lastRewardedOrderCount = store.orders.length
+    return coupon
+}

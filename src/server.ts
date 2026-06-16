@@ -2,6 +2,7 @@ import express from "express"
 import {store, seedStore} from "./store/store"
 import cartRoutes from "./routes/cart"
 import checkoutRoutes from "./routes/checkout"
+import adminRoutes from "./routes/admin"
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(express.json())
 // register cart routes with express application
 app.use("/cart", cartRoutes)
 app.use("/checkout", checkoutRoutes)
+app.use("/admin", adminRoutes)
 
 // port assignment for express application
 app.listen(3000, () => console.log("server is live on port: 3000"))
