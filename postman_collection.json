@@ -1,0 +1,110 @@
+{
+  "info": {
+    "name": "Uniblox Assignment — Cart & Checkout API",
+    "description": "In-memory cart/checkout API with nth-order coupon reward and admin stats. Requests are ordered to follow the happy path: add to cart → checkout → reach the 5th-order milestone → redeem the reward → admin stats. Set the `base` variable if your server isn't on http://localhost:3000.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{base}}/health", "host": ["{{base}}"], "path": ["health"] },
+        "description": "Liveness check → { ok: true }"
+      }
+    },
+    {
+      "name": "Add item to cart",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"productId\": \"p1\",\n  \"quantity\": 2\n}"
+        },
+        "url": { "raw": "{{base}}/cart/u1/items", "host": ["{{base}}"], "path": ["cart", "u1", "items"] },
+        "description": "Add p1 x2 to u1's cart. Adding the same product again merges quantities."
+      }
+    },
+    {
+      "name": "View cart",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{base}}/cart/u1", "host": ["{{base}}"], "path": ["cart", "u1"] },
+        "description": "View u1's cart."
+      }
+    },
+    {
+      "name": "Checkout (no coupon)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": { "raw": "{{base}}/checkout/u1", "host": ["{{base}}"], "path": ["checkout", "u1"] },
+        "description": "Place an order with no coupon. Clears the cart. Every 5th order's response includes a `rewardCoupon` (DISC-1, 10% off). Re-add items and repeat to reach the milestone."
+      }
+    },
+    {
+      "name": "Checkout (with reward coupon)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"couponCode\": \"DISC-1\"\n}"
+        },
+        "url": { "raw": "{{base}}/checkout/u1", "host": ["{{base}}"], "path": ["checkout", "u1"] },
+        "description": "Redeem a previously minted reward coupon. Re-add an item to the cart first (checkout clears it). 400 if the code is unknown or already used."
+      }
+    },
+    {
+      "name": "Remove item from cart",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": { "raw": "{{base}}/cart/u1/items/p1", "host": ["{{base}}"], "path": ["cart", "u1", "items", "p1"] },
+        "description": "Remove p1 from u1's cart. Removing something absent is a no-op, not an error."
+      }
+    },
+    {
+      "name": "Admin — stats",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{base}}/admin/stats", "host": ["{{base}}"], "path": ["admin", "stats"] },
+        "description": "totalItemsPurchased, totalPurchaseAmount (revenue after discounts), totalDiscountAmount, and discountCodes (every minted coupon + which order used it)."
+      }
+    },
+    {
+      "name": "Admin — generate coupon",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": { "raw": "{{base}}/admin/coupons/generate", "host": ["{{base}}"], "path": ["admin", "coupons", "generate"] },
+        "description": "Mint a reward coupon — gated by the same nth-order rule as checkout. 400 ('no reward available: nth-order condition not met') unless orders.length is a fresh multiple of 5."
+      }
+    },
+    {
+      "name": "Add item — bad quantity (400)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"productId\": \"p1\",\n  \"quantity\": -1\n}"
+        },
+        "url": { "raw": "{{base}}/cart/u1/items", "host": ["{{base}}"], "path": ["cart", "u1", "items"] },
+        "description": "Boundary validation: 400 { success: false, message: 'quantity must be a positive integer' } via the central error middleware."
+      }
+    }
+  ]
+}
