@@ -1,4 +1,4 @@
-import express from "express"
+import express, { ErrorRequestHandler } from "express"
 import {store, seedStore} from "./store/store"
 import cartRoutes from "./routes/cart"
 import checkoutRoutes from "./routes/checkout"
@@ -18,10 +18,22 @@ if(store.products.size === 0) {
 }
 
 app.use(express.json())
+
 // register cart routes with express application
 app.use("/cart", cartRoutes)
 app.use("/checkout", checkoutRoutes)
 app.use("/admin", adminRoutes)
+
+app.use((_req, res) => res.status(404).json({ success: false, message: "not found" }))
+
+// registering error middleware
+const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+    const status = typeof err?.status === "number" ? err.status : 500
+    const message = typeof err?.message === "string" ? err.message : "internal server error"
+    res.status(status).json({ success: false, message })
+}
+
+app.use(errorHandler)
 
 // port assignment for express application
 app.listen(3000, () => console.log("server is live on port: 3000"))
