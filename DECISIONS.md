@@ -38,3 +38,16 @@
 **Choice:** Option C. CartItem holds productId + quantity and nothing about money. Checkout reads each product's current price to compute the order, then writes subtotal, discountAmount, and total onto the Order as fixed numbers.
 
 **Why:** The two records have opposite correctness rules even though they hold the same kind of data. A cart must reflect the current price. If a price changes, a stale copy sitting in the cart would quote a number that no longer exists, so the product stays the single source of truth and the cart just points at it (productId). An order does the reverse. It's a historical record, so last week's total must never move when next week's price changes. Freezing the money as numbers at checkout makes the order immutable by construction: there's nothing to recompute, so nothing can drift. Option A duplicates price into the cart and invites stale quotes. Option B would silently rewrite financial history every time a price moved. Splitting by what each record is for, "what you'd pay now" vs "what you paid then," keeps both correct.
+
+## Decision: checkout returns the order and the reward coupon as separate siblings
+
+**Context:** Every nth order auto-mints a reward coupon. Checkout has two things to hand back: the placed order and, sometimes, a freshly minted reward coupon. The order is a frozen historical record (see the cart-vs-order decision above). The reward coupon is a transient bonus produced by this one checkout, redeemed later by some future order.
+
+**Options considered:**
+- Option A: Flatten, return { ...order, rewardCoupon }. Fewer keys for the client, one flat object.
+- Option B: Wrap, return { order, rewardCoupon }. The order stays untouched, the reward sits beside it.
+- Option C: Return the bare Order and signal the reward some other way (a second response field on the route, a lookup endpoint, and so on).
+
+**Choice:** Option B. checkout() returns { order, rewardCoupon }, where rewardCoupon is the minted coupon on a milestone order and null otherwise. The shape is the same on both paths. The caller just truthiness-checks rewardCoupon.
+
+**Why:** The order is meant to be a trusted snapshot of what was bought, the same object that lives in store.orders. Flattening (Option A) would spread a transient, per-checkout reward across that record, so an Order in a response would sometimes carry a rewardCoupon field that isn't on the stored order. That blurs the line between the order and what else happened during this checkout. Wrapping keeps the line sharp: the order is the order, the reward is a sibling. It also keeps two different coupons from colliding in one object. The coupon the buyer spent on this order already lives on it as couponUsed, while rewardCoupon is the new one minted for next time, and naming them as separate keys stops anyone from confusing them. Returning the same { order, rewardCoupon } shape on every checkout (null when there's no reward) means the route and tests never branch on whether the key exists. They read one field and check it. Option C hides a result the caller clearly needs and forces a second round trip for no benefit.

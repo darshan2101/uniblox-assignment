@@ -1,5 +1,5 @@
 import { store } from "../store/store"
-import { markUsed, validateCoupon } from "./coupon.service"
+import { generateCoupon, isEligible, markUsed, validateCoupon } from "./coupon.service"
 
 export function checkout(userId: string, couponCode?: string){
     const cart = store.carts.get(userId)
@@ -31,7 +31,14 @@ export function checkout(userId: string, couponCode?: string){
     if (couponCode) {
         markUsed(couponCode, orderId)
     }
-
+    
     store.carts.delete(userId)
-    return order
+
+    let rewardCoupon = null
+    if(isEligible()) {
+        rewardCoupon = generateCoupon()
+        store.config.lastRewardedOrderCount =  store.orders.length
+    }
+
+    return { order,rewardCoupon }
 }
